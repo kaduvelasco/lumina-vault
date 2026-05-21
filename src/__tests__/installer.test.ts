@@ -222,6 +222,29 @@ describe("installTarget — FileTarget", () => {
     expect(files.filter((f) => f.endsWith(".tmp") || f.endsWith(".dead"))).toHaveLength(0);
   });
 
+  it("writes correct Antigravity mcpServers structure", async () => {
+    const antigravityDir = join(baseDir, ".gemini", "antigravity");
+    await mkdir(antigravityDir, { recursive: true });
+    const antigravityTarget = FILE_TARGETS.find((t) => t.name === "antigravity")!;
+    const target = makeTarget(
+      "antigravity",
+      join(".gemini", "antigravity", "mcp_config.json"),
+      antigravityTarget.mergeConfig
+    );
+
+    expect(await installTarget(target)).toBe("ok");
+
+    const content = JSON.parse(
+      await readFile(join(antigravityDir, "mcp_config.json"), "utf-8")
+    ) as Record<string, unknown>;
+    const entry = (content["mcpServers"] as Record<string, unknown>)["lumina-vault"] as Record<
+      string,
+      unknown
+    >;
+    expect(entry["command"]).toBe("npx");
+    expect(entry["args"]).toEqual(["-y", "lumina-vault"]);
+  });
+
   it("writes correct Cline mcpServers structure with disabled and autoApprove", async () => {
     const clineDir = join(
       baseDir,
@@ -310,8 +333,8 @@ describe("INSTALLER_TARGETS composition", () => {
     expect(names).toContain("cline");
   });
 
-  it("has 5 cli targets and 3 file targets", () => {
-    expect(CLI_TARGETS).toHaveLength(5);
-    expect(FILE_TARGETS).toHaveLength(3);
+  it("has 4 cli targets and 4 file targets", () => {
+    expect(CLI_TARGETS).toHaveLength(4);
+    expect(FILE_TARGETS).toHaveLength(4);
   });
 });

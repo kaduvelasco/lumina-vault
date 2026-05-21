@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/img/logo.png" alt="Lumina Vault" />
+</p>
+
 # Lumina Vault
 
 [![npm version](https://img.shields.io/npm/v/lumina-vault.svg)](https://www.npmjs.com/package/lumina-vault)
@@ -207,9 +211,9 @@ claude mcp add lumina-vault node -- /caminho/absoluto/para/lumina-vault/dist/ind
 
 ---
 
-### Gemini CLI
+### Antigravity CLI
 
-Edite `~/.gemini/settings.json`:
+Edite `~/.gemini/antigravity/mcp_config.json`:
 
 ```json
 {
@@ -222,7 +226,7 @@ Edite `~/.gemini/settings.json`:
 }
 ```
 
-> Reinicie o Gemini CLI após editar o arquivo para que as alterações entrem em vigor.
+> Reinicie o Antigravity CLI após editar o arquivo para que as alterações entrem em vigor.
 
 ---
 
@@ -507,7 +511,7 @@ O binário `lumina-vault` expõe comandos de instalação e configuração do va
 
 ### `install [target]`
 
-Configura automaticamente o lumina-vault como servidor MCP nas suas ferramentas de IA. Targets suportados: `claude`, `gemini`, `codex`, `opencode`, `windsurf`, `cursor`, `zed`, `cline`.
+Configura automaticamente o lumina-vault como servidor MCP nas suas ferramentas de IA. Targets suportados: `claude`, `codex`, `opencode`, `windsurf`, `antigravity`, `cursor`, `zed`, `cline`.
 
 ```bash
 # Instalar em todas as ferramentas suportadas (pede confirmação)
@@ -515,16 +519,16 @@ lumina-vault install
 
 # Instalar em uma ferramenta específica
 lumina-vault install claude
-lumina-vault install gemini
 lumina-vault install codex
 lumina-vault install opencode
 lumina-vault install windsurf
+lumina-vault install antigravity
 lumina-vault install cursor
 lumina-vault install zed
 lumina-vault install cline
 ```
 
-Targets baseados em CLI (`claude`, `gemini`, `codex`, `opencode`, `windsurf`) são ignorados se a ferramenta não for encontrada no `PATH`. Targets baseados em arquivo (`cursor`, `zed`, `cline`) são ignorados se o diretório de configuração da ferramenta não existir.
+Targets baseados em CLI (`claude`, `codex`, `opencode`, `windsurf`) são ignorados se a ferramenta não for encontrada no `PATH`. Targets baseados em arquivo (`antigravity`, `cursor`, `zed`, `cline`) são ignorados se o diretório de configuração da ferramenta não existir.
 
 ---
 

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/img/logo.png" alt="Lumina Vault" />
+</p>
+
 # Lumina Vault
 
 [![npm version](https://img.shields.io/npm/v/lumina-vault.svg)](https://www.npmjs.com/package/lumina-vault)
@@ -207,9 +211,9 @@ claude mcp add lumina-vault node -- /absolute/path/to/lumina-vault/dist/index.js
 
 ---
 
-### Gemini CLI
+### Antigravity CLI
 
-Edit `~/.gemini/settings.json`:
+Edit `~/.gemini/antigravity/mcp_config.json`:
 
 ```json
 {
@@ -222,7 +226,7 @@ Edit `~/.gemini/settings.json`:
 }
 ```
 
-> Restart Gemini CLI after editing the file for changes to take effect.
+> Restart Antigravity CLI after editing the file for changes to take effect.
 
 ---
 
@@ -507,7 +511,7 @@ The `lumina-vault` binary exposes commands for installation and vault configurat
 
 ### `install [target]`
 
-Automatically configure lumina-vault as an MCP server in your AI tools. Supported targets: `claude`, `gemini`, `codex`, `opencode`, `windsurf`, `cursor`, `zed`, `cline`.
+Automatically configure lumina-vault as an MCP server in your AI tools. Supported targets: `claude`, `codex`, `opencode`, `windsurf`, `antigravity`, `cursor`, `zed`, `cline`.
 
 ```bash
 # Install in all supported tools (prompts for confirmation)
@@ -515,16 +519,16 @@ lumina-vault install
 
 # Install in a specific tool
 lumina-vault install claude
-lumina-vault install gemini
 lumina-vault install codex
 lumina-vault install opencode
 lumina-vault install windsurf
+lumina-vault install antigravity
 lumina-vault install cursor
 lumina-vault install zed
 lumina-vault install cline
 ```
 
-CLI-based targets (`claude`, `gemini`, `codex`, `opencode`, `windsurf`) are skipped if the tool is not found in `PATH`. File-based targets (`cursor`, `zed`, `cline`) are skipped if the tool's configuration directory does not exist.
+CLI-based targets (`claude`, `codex`, `opencode`, `windsurf`) are skipped if the tool is not found in `PATH`. File-based targets (`antigravity`, `cursor`, `zed`, `cline`) are skipped if the tool's configuration directory does not exist.
 
 ---
 

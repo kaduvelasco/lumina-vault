@@ -1,6 +1,6 @@
 {
   "name": "lumina-vault",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lumina Vault — MCP server for persistent AI development memory, organizes project knowledge across sessions",
   "keywords": [
     "mcp",

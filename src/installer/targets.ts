@@ -40,6 +40,10 @@ function zedConfigPath(homeDir: string): string {
   return join(homeDir, ".config", "zed", "settings.json");
 }
 
+function antigravityConfigPath(homeDir: string): string {
+  return join(homeDir, ".gemini", "antigravity", "mcp_config.json");
+}
+
 function clineConfigPath(homeDir: string): string {
   // Only covers VS Code installed via .deb/.rpm on Linux.
   // Snap, Flatpak, and VSCodium use different config directories.
@@ -68,10 +72,16 @@ export const INSTALLER_TARGETS: readonly InstallerTarget[] = [
     args: ["mcp", "add", "lumina-vault", "npx", "--", "-y", "lumina-vault"],
   },
   {
-    kind: "cli",
-    name: "gemini",
-    command: "gemini",
-    args: ["mcp", "add", "lumina-vault", "npx", "--", "-y", "lumina-vault"],
+    kind: "file",
+    name: "antigravity",
+    configPath: antigravityConfigPath,
+    mergeConfig: (existing) => ({
+      ...existing,
+      mcpServers: {
+        ...asObject(existing["mcpServers"]),
+        "lumina-vault": LUMINA_VAULT_ENTRY,
+      },
+    }),
   },
   {
     kind: "cli",
