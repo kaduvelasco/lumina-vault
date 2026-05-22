@@ -528,7 +528,7 @@ lumina-vault install zed
 lumina-vault install cline
 ```
 
-CLI-based targets (`claude`, `codex`, `opencode`, `windsurf`) are skipped if the tool is not found in `PATH`. File-based targets (`antigravity`, `cursor`, `zed`, `cline`) are skipped if the tool's configuration directory does not exist.
+CLI-based targets (`claude`, `codex`, `opencode`, `windsurf`) are skipped if the tool is not found in `PATH`. File-based targets (`antigravity`, `cursor`, `zed`, `cline`) are skipped if the tool is not detected on the system (directory presence check).
 
 ---
 

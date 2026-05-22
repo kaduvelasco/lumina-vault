@@ -1,10 +1,10 @@
 import { spawnSync } from "child_process";
 import { createInterface } from "readline";
 import { existsSync } from "fs";
-import { readFile, writeFile, rename, unlink, mkdir } from "fs/promises";
-import { dirname, join } from "path";
+import { readFile, mkdir } from "fs/promises";
+import { dirname } from "path";
 import { homedir } from "os";
-import { randomUUID } from "crypto";
+import { atomicWrite } from "../utils/atomicWrite.js";
 import { INSTALLER_TARGETS, TARGET_NAMES, type InstallerTarget } from "./targets.js";
 
 const WHICH_TIMEOUT_MS = 5_000;
@@ -17,28 +17,17 @@ export function isCommandAvailable(command: string): boolean {
 }
 
 async function atomicWriteJson(filePath: string, data: Record<string, unknown>): Promise<void> {
-  const tmp = join(dirname(filePath), `${randomUUID()}.tmp`);
-  try {
-    await mkdir(dirname(filePath), { recursive: true });
-    await writeFile(tmp, JSON.stringify(data, null, 2) + "\n", "utf-8");
-    await rename(tmp, filePath);
-  } catch (err) {
-    try {
-      await unlink(tmp);
-    } catch {
-      // ignore cleanup error — file may not have been created
-    }
-    throw err;
-  }
+  await mkdir(dirname(filePath), { recursive: true });
+  await atomicWrite(filePath, JSON.stringify(data, null, 2) + "\n");
 }
 
 async function installFileTarget(
   target: Extract<InstallerTarget, { kind: "file" }>
 ): Promise<"ok" | "skip" | "fail"> {
   const configPath = target.configPath(homedir());
-  const parentDir = dirname(configPath);
+  const presenceDir = target.presenceDir ? target.presenceDir(homedir()) : dirname(configPath);
 
-  if (!existsSync(parentDir)) {
+  if (!existsSync(presenceDir)) {
     console.log(`  ⚠  ${target.name} — not found, skipping`);
     return "skip";
   }

@@ -113,7 +113,19 @@ async function detectFromReadme(workspaceRoot: string, answers: InitAnswers): Pr
         foundTitle = true;
         continue;
       }
-      if (foundTitle && trimmed && !trimmed.startsWith("#") && !trimmed.startsWith("!")) {
+      const firstCharCode = trimmed.charCodeAt(0);
+      const isAsciiStart = firstCharCode >= 32 && firstCharCode <= 126;
+      if (
+        foundTitle &&
+        trimmed &&
+        isAsciiStart &&
+        !trimmed.startsWith("#") &&
+        !trimmed.startsWith("!") &&
+        !trimmed.startsWith("[") &&
+        !trimmed.startsWith("<") &&
+        !trimmed.startsWith(">") &&
+        !trimmed.startsWith("|")
+      ) {
         answers.description = trimmed.replace(/\*\*/g, "").replace(/`/g, "").slice(0, 200);
         break;
       }
@@ -293,8 +305,10 @@ export async function analyzeProject(workspaceRoot: string): Promise<InitAnswers
   await detectFromCargo(workspaceRoot, answers);
   await detectFromPython(workspaceRoot, answers);
   await detectFromGo(workspaceRoot, answers);
-  await detectInfrastructure(workspaceRoot, answers);
-  await detectComponents(workspaceRoot, answers);
+  await Promise.all([
+    detectInfrastructure(workspaceRoot, answers),
+    detectComponents(workspaceRoot, answers),
+  ]);
 
   return answers;
 }

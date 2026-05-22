@@ -112,9 +112,27 @@ describe("archiveMemory", () => {
     expect(result.keptCount).toBe(0);
 
     const active = await readFile(join(basePath, "my-project", "progress.md"), "utf-8");
-    // Template header (# Progress) is undated content and is preserved
     expect(active).not.toContain("very old");
     expect(active).not.toContain("ancient");
+    // Template header is undated content and must be preserved
+    expect(active).toContain("# Progress");
+  });
+
+  it("restores template when file has no header and all entries are archived", async () => {
+    // Overwrite the file with only a dated entry (no # Progress header)
+    const { writeMemory } = await import("../vault.js");
+    await writeMemory(basePath, "my-project", "progress.md", `## ${daysAgo(100)}\n- headerless`);
+
+    const result = await archiveMemory(basePath, "my-project", "progress.md", 30);
+
+    expect(result.archivedCount).toBe(1);
+    expect(result.keptCount).toBe(0);
+
+    const active = await readFile(join(basePath, "my-project", "progress.md"), "utf-8");
+    expect(active).not.toContain("headerless");
+    // Must not be an empty file — template is restored as fallback
+    expect(active.trim()).not.toBe("");
+    expect(active).toContain("# Progress");
   });
 
   it("appends to existing archive file without overwriting it", async () => {

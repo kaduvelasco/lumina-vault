@@ -11,6 +11,7 @@ export type FileTarget = {
   readonly kind: "file";
   readonly name: string;
   readonly configPath: (homeDir: string) => string;
+  readonly presenceDir?: (homeDir: string) => string;
   readonly mergeConfig: (existing: Record<string, unknown>) => Record<string, unknown>;
 };
 
@@ -75,6 +76,9 @@ export const INSTALLER_TARGETS: readonly InstallerTarget[] = [
     kind: "file",
     name: "antigravity",
     configPath: antigravityConfigPath,
+    // Antigravity CLI creates ~/.gemini/ on install but only creates the
+    // antigravity/ subdirectory on first MCP use. Check the parent level.
+    presenceDir: (homeDir) => join(homeDir, ".gemini"),
     mergeConfig: (existing) => ({
       ...existing,
       mcpServers: {

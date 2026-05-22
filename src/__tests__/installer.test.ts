@@ -245,6 +245,37 @@ describe("installTarget — FileTarget", () => {
     expect(entry["args"]).toEqual(["-y", "lumina-vault"]);
   });
 
+  it("installs antigravity when ~/.gemini exists but ~/.gemini/antigravity does not", async () => {
+    // presenceDir for antigravity is ~/.gemini/, not ~/.gemini/antigravity/
+    // so the target is not skipped even when the config subdir is absent
+    const geminiDir = join(baseDir, ".gemini");
+    await mkdir(geminiDir);
+    const antigravityTarget = FILE_TARGETS.find((t) => t.name === "antigravity")!;
+    const target: typeof antigravityTarget = {
+      ...antigravityTarget,
+      configPath: () => join(baseDir, ".gemini", "antigravity", "mcp_config.json"),
+      presenceDir: () => geminiDir,
+    };
+
+    expect(await installTarget(target)).toBe("ok");
+
+    const content = JSON.parse(
+      await readFile(join(baseDir, ".gemini", "antigravity", "mcp_config.json"), "utf-8")
+    ) as Record<string, unknown>;
+    expect(content).toHaveProperty("mcpServers.lumina-vault");
+  });
+
+  it("skips antigravity when ~/.gemini does not exist", async () => {
+    const antigravityTarget = FILE_TARGETS.find((t) => t.name === "antigravity")!;
+    const target: typeof antigravityTarget = {
+      ...antigravityTarget,
+      configPath: () => join(baseDir, ".gemini", "antigravity", "mcp_config.json"),
+      presenceDir: () => join(baseDir, ".gemini"),
+    };
+
+    expect(await installTarget(target)).toBe("skip");
+  });
+
   it("writes correct Cline mcpServers structure with disabled and autoApprove", async () => {
     const clineDir = join(
       baseDir,

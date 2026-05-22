@@ -1,17 +1,7 @@
 import { existsSync } from "fs";
-import {
-  readdir,
-  readFile,
-  writeFile,
-  mkdir,
-  appendFile,
-  unlink,
-  stat,
-  rm,
-  rename,
-} from "fs/promises";
-import { randomUUID } from "crypto";
+import { readdir, readFile, mkdir, appendFile, unlink, stat, rm, rename } from "fs/promises";
 import { join, resolve, dirname } from "path";
+import { atomicWrite } from "./utils/atomicWrite.js";
 import { homedir } from "os";
 import { logger } from "./logger.js";
 
@@ -107,22 +97,6 @@ export const MEMORY_TEMPLATES: Record<MemoryFile, string> = {
 const MEMORY_TEMPLATES_TRIMMED: Record<MemoryFile, string> = Object.fromEntries(
   MEMORY_FILES.map((f) => [f, MEMORY_TEMPLATES[f].trim()])
 ) as Record<MemoryFile, string>;
-
-/**
- * Ensures a write operation is atomic by writing to a temporary file first.
- */
-async function atomicWrite(filePath: string, content: string): Promise<void> {
-  const tempPath = `${filePath}.${randomUUID()}.tmp`;
-  try {
-    await writeFile(tempPath, content, "utf-8");
-    await rename(tempPath, filePath);
-  } catch (err) {
-    if (existsSync(tempPath)) {
-      await unlink(tempPath).catch(() => {});
-    }
-    throw err;
-  }
-}
 
 export interface LocalVaultConfig {
   project: string;
@@ -538,7 +512,7 @@ export async function archiveMemory(
   await appendFile(archivePath, archivePrefix + archiveContent, "utf-8");
 
   const activeContent = [...noDateParts, ...toKeep.map((s) => s.text)].join("");
-  await atomicWrite(filePath, activeContent || "");
+  await atomicWrite(filePath, activeContent || MEMORY_TEMPLATES[safe as MemoryFile]);
 
   logger.info(`Archived ${toArchive.length} entries from ${label}/${safe} → ${archiveFile}`);
   return {
@@ -722,6 +696,8 @@ export async function searchMemory(
 
   const projects = project ? [project] : await listProjects(basePath);
 
+  type SearchScope = { dir: string; proj: string; sub?: string };
+
   outer: for (const proj of projects) {
     let projDir: string;
     try {
@@ -733,7 +709,6 @@ export async function searchMemory(
     if (!existsSync(projDir)) continue;
 
     // Determine which dirs to search: specific subproject, all subprojects, or root only
-    type SearchScope = { dir: string; proj: string; sub?: string };
     const scopes: SearchScope[] = [];
 
     if (subproject) {
@@ -753,7 +728,7 @@ export async function searchMemory(
     for (const scope of scopes) {
       if (!existsSync(scope.dir)) continue;
       const filesRaw = await readdir(scope.dir);
-      const files = filesRaw.filter((f) => f.endsWith(".md"));
+      const files = filesRaw.filter((f) => f.endsWith(".md")).sort();
 
       for (const file of files) {
         const filePath = join(scope.dir, file);

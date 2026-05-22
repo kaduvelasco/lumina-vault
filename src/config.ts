@@ -1,25 +1,12 @@
-import { readFile, writeFile, rename, unlink, mkdir } from "fs/promises";
+import { readFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
-import { randomUUID } from "crypto";
 import { z } from "zod";
+import { atomicWrite } from "./utils/atomicWrite.js";
 
 const CONFIG_DIR = join(homedir(), ".lumina-vault");
 const CONFIG_FILE = join(CONFIG_DIR, "config.json");
-
-async function atomicWrite(filePath: string, content: string): Promise<void> {
-  const tempPath = `${filePath}.${randomUUID()}.tmp`;
-  try {
-    await writeFile(tempPath, content, "utf-8");
-    await rename(tempPath, filePath);
-  } catch (err) {
-    if (existsSync(tempPath)) {
-      await unlink(tempPath).catch(() => {});
-    }
-    throw err;
-  }
-}
 
 export interface GlobalConfig {
   globalVaultPath?: string;
