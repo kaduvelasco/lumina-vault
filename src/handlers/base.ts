@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { logger } from "../logger.js";
 
@@ -38,11 +37,9 @@ export abstract class BaseToolHandler<T extends z.ZodTypeAny> {
   }
 
   private getJsonSchema() {
-    const schema = zodToJsonSchema(this.inputSchema, {
-      target: "jsonSchema7",
-      $refStrategy: "none",
-    }) as Record<string, unknown>;
-    // Strip the $schema meta-field — MCP clients don't need it
+    // Use Zod v4's native JSON Schema generation — no external dependency needed.
+    const schema = z.toJSONSchema(this.inputSchema) as Record<string, unknown>;
+    // Strip the $schema meta-field — MCP clients don't need it.
     delete schema["$schema"];
     return schema;
   }

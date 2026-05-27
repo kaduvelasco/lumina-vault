@@ -16,7 +16,7 @@ export const MEMORY_FILES = [
   "next_steps.md",
 ] as const;
 
-export const APPEND_ONLY_FILES: readonly string[] = ["progress.md", "decisions.md"];
+export const APPEND_ONLY_FILES = ["progress.md", "decisions.md"] as const;
 
 const DATE_HEADER_RE = /^##\s+(\d{4}-\d{2}-\d{2})\b/m;
 const SECTION_SPLIT_RE = /(?=^##\s+\d{4}-\d{2}-\d{2}\b)/m;
@@ -403,7 +403,10 @@ export async function appendMemory(
     throw new Error(`Project not found: "${label}". Use create_project first.`);
   }
   const safe = validateFilename(filename);
-  if (APPEND_ONLY_FILES.includes(safe) && !DATE_HEADER_RE.test(content)) {
+  if (
+    (APPEND_ONLY_FILES as ReadonlyArray<string>).includes(safe) &&
+    !DATE_HEADER_RE.test(content)
+  ) {
     const today = new Date().toISOString().slice(0, 10);
     throw new Error(
       `Content appended to "${safe}" must contain a date header in the format "## YYYY-MM-DD".\n` +
@@ -456,7 +459,7 @@ export async function archiveMemory(
   if (!existsSync(dir)) throw new Error(`Project not found: "${label}"`);
 
   const safe = validateFilename(filename);
-  if (!APPEND_ONLY_FILES.includes(safe)) {
+  if (!(APPEND_ONLY_FILES as ReadonlyArray<string>).includes(safe)) {
     throw new Error(
       `archive_memory only supports append-only files: ${APPEND_ONLY_FILES.join(", ")}`
     );

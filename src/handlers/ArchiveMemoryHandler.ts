@@ -4,16 +4,36 @@ import { archiveMemory, APPEND_ONLY_FILES } from "../vault.js";
 import { resolveContextAndRemember, contextNote } from "./resolveContext.js";
 import { PATH_DESCRIPTION } from "./constants.js";
 
-export class ArchiveMemoryHandler extends BaseToolHandler<
-  z.ZodObject<{
-    project: z.ZodOptional<z.ZodString>;
-    subproject: z.ZodOptional<z.ZodString>;
-    filename: z.ZodEnum<["progress.md", "decisions.md"]>;
-    keep_days: z.ZodDefault<z.ZodNumber>;
-    path: z.ZodOptional<z.ZodString>;
-    workspace_root: z.ZodOptional<z.ZodString>;
-  }>
-> {
+const ArchiveMemoryInputSchema = z.object({
+  project: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Project name. If omitted, auto-discovered from workspace_root (.luminavault.json) or last used project."
+    ),
+  subproject: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("Subproject name. When provided, targets vault/project/subproject/."),
+  filename: z.enum(APPEND_ONLY_FILES).describe("File to archive. Must be an append-only file."),
+  keep_days: z
+    .number()
+    .int()
+    .min(1)
+    .default(90)
+    .describe("Number of recent days to keep in the active file (default: 90)."),
+  path: z.string().optional().describe(PATH_DESCRIPTION),
+  workspace_root: z
+    .string()
+    .optional()
+    .describe(
+      "Project folder path. Used to auto-discover .luminavault.json when project is omitted."
+    ),
+});
+
+export class ArchiveMemoryHandler extends BaseToolHandler<typeof ArchiveMemoryInputSchema> {
   public readonly name = "archive_memory";
   public readonly description = `Move entries older than N days from an append-only file to a dated archive file, keeping the active file lean.
 
@@ -29,42 +49,13 @@ The archive file is never deleted — run search_memory or read_memory to access
 
 Use this when progress.md or decisions.md grows large and slows down load_project_context.`;
 
-  public readonly inputSchema = z.object({
-    project: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        "Project name. If omitted, auto-discovered from workspace_root (.luminavault.json) or last used project."
-      ),
-    subproject: z
-      .string()
-      .min(1)
-      .optional()
-      .describe("Subproject name. When provided, targets vault/project/subproject/."),
-    filename: z
-      .enum(["progress.md", "decisions.md"])
-      .describe("File to archive. Must be an append-only file."),
-    keep_days: z
-      .number()
-      .int()
-      .min(1)
-      .default(90)
-      .describe("Number of recent days to keep in the active file (default: 90)."),
-    path: z.string().optional().describe(PATH_DESCRIPTION),
-    workspace_root: z
-      .string()
-      .optional()
-      .describe(
-        "Project folder path. Used to auto-discover .luminavault.json when project is omitted."
-      ),
-  });
+  public readonly inputSchema = ArchiveMemoryInputSchema;
 
   constructor(private basePath: string) {
     super();
   }
 
-  async execute(args: z.infer<typeof this.inputSchema>) {
+  async execute(args: z.infer<typeof ArchiveMemoryInputSchema>) {
     try {
       const ctx = await resolveContextAndRemember(this.basePath, args);
       if (!ctx.ok) return ctx.response;

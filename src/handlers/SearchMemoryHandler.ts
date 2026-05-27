@@ -5,18 +5,50 @@ import { resolveContext } from "./resolveContext.js";
 import { updateLastProject } from "../config.js";
 import { PATH_DESCRIPTION } from "./constants.js";
 
-export class SearchMemoryHandler extends BaseToolHandler<
-  z.ZodObject<{
-    query: z.ZodString;
-    project: z.ZodOptional<z.ZodString>;
-    subproject: z.ZodOptional<z.ZodString>;
-    limit: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
-    context_lines: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
-    offset: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
-    path: z.ZodOptional<z.ZodString>;
-    workspace_root: z.ZodOptional<z.ZodString>;
-  }>
-> {
+const SearchMemoryInputSchema = z.object({
+  query: z.string().min(1).describe("Text to search for (case-insensitive, cannot be empty)"),
+  project: z
+    .string()
+    .optional()
+    .describe(
+      "Limit search to a specific project. If omitted without workspace_root, searches all projects."
+    ),
+  subproject: z
+    .string()
+    .optional()
+    .describe("Limit search to a specific subproject (requires project)."),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(1000)
+    .optional()
+    .default(100)
+    .describe("Maximum number of results to return (default: 100, max: 1000)"),
+  context_lines: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .default(0)
+    .describe("Number of context lines to show around each match (default: 0)"),
+  offset: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .default(0)
+    .describe("Number of results to skip for pagination (default: 0)"),
+  path: z.string().optional().describe(PATH_DESCRIPTION),
+  workspace_root: z
+    .string()
+    .optional()
+    .describe(
+      "Project folder path. When provided, auto-discovers .luminavault.json to restrict search to that project/subproject."
+    ),
+});
+
+export class SearchMemoryHandler extends BaseToolHandler<typeof SearchMemoryInputSchema> {
   public readonly name = "search_memory";
   public readonly description = `Search for a text string across memory files in the vault.
 
@@ -27,52 +59,13 @@ Scope:
 
 Results are returned as: project[/subproject]/file:lineNumber  matched text`;
 
-  public readonly inputSchema = z.object({
-    query: z.string().min(1).describe("Text to search for (case-insensitive, cannot be empty)"),
-    project: z
-      .string()
-      .optional()
-      .describe(
-        "Limit search to a specific project. If omitted without workspace_root, searches all projects."
-      ),
-    subproject: z
-      .string()
-      .optional()
-      .describe("Limit search to a specific subproject (requires project)."),
-    limit: z
-      .number()
-      .int()
-      .min(1)
-      .max(1000)
-      .optional()
-      .default(100)
-      .describe("Maximum number of results to return (default: 100, max: 1000)"),
-    context_lines: z
-      .number()
-      .optional()
-      .default(0)
-      .describe("Number of context lines to show around each match (default: 0)"),
-    offset: z
-      .number()
-      .int()
-      .min(0)
-      .optional()
-      .default(0)
-      .describe("Number of results to skip for pagination (default: 0)"),
-    path: z.string().optional().describe(PATH_DESCRIPTION),
-    workspace_root: z
-      .string()
-      .optional()
-      .describe(
-        "Project folder path. When provided, auto-discovers .luminavault.json to restrict search to that project/subproject."
-      ),
-  });
+  public readonly inputSchema = SearchMemoryInputSchema;
 
   constructor(private basePath: string) {
     super();
   }
 
-  async execute(args: z.infer<typeof this.inputSchema>) {
+  async execute(args: z.infer<typeof SearchMemoryInputSchema>) {
     try {
       let basePath = this.basePath;
       let project: string | undefined = args.project;

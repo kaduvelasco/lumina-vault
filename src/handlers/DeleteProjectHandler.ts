@@ -3,15 +3,24 @@ import { BaseToolHandler } from "./base.js";
 import { deleteProject, promoteSubProject, listSubProjects, resolveBasePath } from "../vault.js";
 import { PATH_DESCRIPTION } from "./constants.js";
 
-export class DeleteProjectHandler extends BaseToolHandler<
-  z.ZodObject<{
-    project: z.ZodString;
-    subproject: z.ZodOptional<z.ZodString>;
-    confirm: z.ZodBoolean;
-    subproject_action: z.ZodOptional<z.ZodEnum<["cancel", "promote", "delete_all"]>>;
-    path: z.ZodOptional<z.ZodString>;
-  }>
-> {
+const DeleteProjectInputSchema = z.object({
+  project: z.string().min(1).describe("Project name to delete"),
+  subproject: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("Subproject name. When provided, deletes only this subproject."),
+  confirm: z.boolean().describe("Must be true to confirm permanent deletion"),
+  subproject_action: z
+    .enum(["cancel", "promote", "delete_all"] as const)
+    .optional()
+    .describe(
+      'Required when deleting a project that has subprojects: "cancel", "promote", or "delete_all"'
+    ),
+  path: z.string().optional().describe(PATH_DESCRIPTION),
+});
+
+export class DeleteProjectHandler extends BaseToolHandler<typeof DeleteProjectInputSchema> {
   public readonly name = "delete_project";
   public readonly description = `Permanently delete a project or subproject. This action is irreversible. Always ask the user explicitly before calling this tool.
 
@@ -29,28 +38,13 @@ DELETING A PROJECT:
   If subproject_action is omitted and the project has subprojects, the tool will list them
   and return a warning asking which action to take — call the tool again with the chosen action.`;
 
-  public readonly inputSchema = z.object({
-    project: z.string().min(1).describe("Project name to delete"),
-    subproject: z
-      .string()
-      .min(1)
-      .optional()
-      .describe("Subproject name. When provided, deletes only this subproject."),
-    confirm: z.boolean().describe("Must be true to confirm permanent deletion"),
-    subproject_action: z
-      .enum(["cancel", "promote", "delete_all"])
-      .optional()
-      .describe(
-        'Required when deleting a project that has subprojects: "cancel", "promote", or "delete_all"'
-      ),
-    path: z.string().optional().describe(PATH_DESCRIPTION),
-  });
+  public readonly inputSchema = DeleteProjectInputSchema;
 
   constructor(private basePath: string) {
     super();
   }
 
-  async execute(args: z.infer<typeof this.inputSchema>) {
+  async execute(args: z.infer<typeof DeleteProjectInputSchema>) {
     const projectName = args.project.trim();
     const subprojectName = args.subproject?.trim();
 

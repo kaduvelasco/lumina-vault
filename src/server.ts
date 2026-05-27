@@ -44,7 +44,7 @@ export function createServer(basePath: string) {
           content: [
             {
               type: "text",
-              text: `Invalid parameters: ${err.issues.map((e: z.ZodIssue) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
+              text: `Invalid parameters: ${err.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
             },
           ],
           isError: true,

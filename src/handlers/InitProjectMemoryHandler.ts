@@ -14,24 +14,46 @@ Please provide one of the following:
 
 If this is a brand-new project with no .luminavault.json yet, provide both "project" and "workspace_root" so the tool can create the config file for you.`;
 
-export class InitProjectMemoryHandler extends BaseToolHandler<
-  z.ZodObject<{
-    project: z.ZodOptional<z.ZodString>;
-    subproject: z.ZodOptional<z.ZodString>;
-    path: z.ZodOptional<z.ZodString>;
-    workspace_root: z.ZodOptional<z.ZodString>;
-    auto_detect: z.ZodOptional<z.ZodBoolean>;
-    description: z.ZodOptional<z.ZodString>;
-    goal: z.ZodOptional<z.ZodString>;
-    phase: z.ZodOptional<z.ZodString>;
-    architecture_overview: z.ZodOptional<z.ZodString>;
-    components: z.ZodOptional<z.ZodString>;
-    languages: z.ZodOptional<z.ZodString>;
-    frameworks: z.ZodOptional<z.ZodString>;
-    infrastructure: z.ZodOptional<z.ZodString>;
-    next_steps: z.ZodOptional<z.ZodString>;
-  }>
-> {
+const InitProjectMemoryInputSchema = z.object({
+  project: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Parent project name. If omitted, auto-discovered from workspace_root (.luminavault.json)."
+    ),
+  subproject: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Subproject name (plugin, module, package, etc.). When provided, vault is created at vault/project/subproject/."
+    ),
+  path: z.string().optional().describe(PATH_DESCRIPTION),
+  workspace_root: z
+    .string()
+    .optional()
+    .describe(
+      "Local root directory of the project or subproject. Used to auto-discover .luminavault.json and to create one after initialization."
+    ),
+  auto_detect: z
+    .boolean()
+    .optional()
+    .describe(
+      "When true, analyzes the project files at workspace_root and infers description, languages, frameworks, and infrastructure automatically."
+    ),
+  description: z.string().optional().describe("What the project does"),
+  goal: z.string().optional().describe("Main goal or objective"),
+  phase: z.string().optional().describe("Current phase: planning / mvp / active / maintenance"),
+  architecture_overview: z.string().optional().describe("Brief architecture description"),
+  components: z.string().optional().describe("Main components, comma-separated"),
+  languages: z.string().optional().describe("Programming languages"),
+  frameworks: z.string().optional().describe("Frameworks and libraries"),
+  infrastructure: z.string().optional().describe("Infrastructure and hosting"),
+  next_steps: z.string().optional().describe("Immediate next tasks, comma or newline separated"),
+});
+
+export class InitProjectMemoryHandler extends BaseToolHandler<typeof InitProjectMemoryInputSchema> {
   public readonly name = "init_project_memory";
   public readonly description = `Initialize memory files for a project or subproject with structured content.
 
@@ -75,50 +97,13 @@ If option 2: ask these questions (skip any the user can't answer yet):
 
 Only files that are empty or contain the blank template will be written.`;
 
-  public readonly inputSchema = z.object({
-    project: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        "Parent project name. If omitted, auto-discovered from workspace_root (.luminavault.json)."
-      ),
-    subproject: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        "Subproject name (plugin, module, package, etc.). When provided, vault is created at vault/project/subproject/."
-      ),
-    path: z.string().optional().describe(PATH_DESCRIPTION),
-    workspace_root: z
-      .string()
-      .optional()
-      .describe(
-        "Local root directory of the project or subproject. Used to auto-discover .luminavault.json and to create one after initialization."
-      ),
-    auto_detect: z
-      .boolean()
-      .optional()
-      .describe(
-        "When true, analyzes the project files at workspace_root and infers description, languages, frameworks, and infrastructure automatically."
-      ),
-    description: z.string().optional().describe("What the project does"),
-    goal: z.string().optional().describe("Main goal or objective"),
-    phase: z.string().optional().describe("Current phase: planning / mvp / active / maintenance"),
-    architecture_overview: z.string().optional().describe("Brief architecture description"),
-    components: z.string().optional().describe("Main components, comma-separated"),
-    languages: z.string().optional().describe("Programming languages"),
-    frameworks: z.string().optional().describe("Frameworks and libraries"),
-    infrastructure: z.string().optional().describe("Infrastructure and hosting"),
-    next_steps: z.string().optional().describe("Immediate next tasks, comma or newline separated"),
-  });
+  public readonly inputSchema = InitProjectMemoryInputSchema;
 
   constructor(private basePath: string) {
     super();
   }
 
-  async execute(args: z.infer<typeof this.inputSchema>) {
+  async execute(args: z.infer<typeof InitProjectMemoryInputSchema>) {
     if (args.auto_detect && !args.workspace_root) {
       return {
         content: [

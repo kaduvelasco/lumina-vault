@@ -4,31 +4,28 @@ import { readGlobalConfig } from "../config.js";
 import { readLocalConfig, listSubProjects, resolveBasePath } from "../vault.js";
 import { PATH_DESCRIPTION } from "./constants.js";
 
-export class GetVaultConfigHandler extends BaseToolHandler<
-  z.ZodObject<{
-    workspace_root: z.ZodOptional<z.ZodString>;
-    path: z.ZodOptional<z.ZodString>;
-  }>
-> {
+const GetVaultConfigInputSchema = z.object({
+  workspace_root: z
+    .string()
+    .optional()
+    .describe(
+      "Project folder path. When provided, the tool reads .luminavault.json (walking up the directory tree) and lists auto-detected subprojects."
+    ),
+  path: z.string().optional().describe(PATH_DESCRIPTION),
+});
+
+export class GetVaultConfigHandler extends BaseToolHandler<typeof GetVaultConfigInputSchema> {
   public readonly name = "get_vault_config";
   public readonly description =
     "Returns the current vault configuration: active vault path, global vault settings, last used project, and — when workspace_root is provided — the local project/subproject config and auto-detected subprojects. Call this before init_project_memory when the user has not specified a vault path.";
 
-  public readonly inputSchema = z.object({
-    workspace_root: z
-      .string()
-      .optional()
-      .describe(
-        "Project folder path. When provided, the tool reads .luminavault.json (walking up the directory tree) and lists auto-detected subprojects."
-      ),
-    path: z.string().optional().describe(PATH_DESCRIPTION),
-  });
+  public readonly inputSchema = GetVaultConfigInputSchema;
 
   constructor(private basePath: string) {
     super();
   }
 
-  async execute(args: z.infer<typeof this.inputSchema>) {
+  async execute(args: z.infer<typeof GetVaultConfigInputSchema>) {
     try {
       const config = await readGlobalConfig();
       const resolvedPath = args.path ? resolveBasePath(args.path) : this.basePath;

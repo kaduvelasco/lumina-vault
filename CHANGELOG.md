@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-27
+
+### Changed
+
+- Migrated from Zod v3 to **Zod v4.4.3** across all 15 tool handlers.
+  - Each handler schema is now declared as a module-level `const` (`const NameInputSchema = z.object({...})`); the class generic uses `typeof NameInputSchema` instead of explicit `z.ZodObject<{...}>` annotations.
+  - `z.enum()` arrays use `as const` where required to preserve literal union types.
+- `base.ts`: replaced `zod-to-json-schema` with Zod v4's native `z.toJSONSchema()` for MCP schema generation. `zod-to-json-schema` removed from direct dependencies (remains a transitive dependency of `@modelcontextprotocol/sdk`).
+- `APPEND_ONLY_FILES` in `vault.ts` narrowed from `readonly string[]` to an `as const` tuple; `.includes()` call sites use an explicit `as ReadonlyArray<string>` cast.
+- `ArchiveMemoryHandler`: `filename` enum is now derived directly from `APPEND_ONLY_FILES`, making it the single source of truth.
+- `SearchMemoryHandler`: `context_lines` field now enforces `.int().min(0)`, consistent with `limit` and `offset`.
+- `server.ts`: removed explicit `z.ZodIssue` type annotation (deprecated in Zod v4); type is inferred from `err.issues`.
+- Updated TypeScript from 5.x to **6.0.3**. Added explicit `"types": ["node"]` to `tsconfig.json` (required by TypeScript 6, which no longer injects `@types/node` automatically).
+- Updated `@types/node` from 22.x to **25.x**.
+- Updated dev dependencies: `vitest`, `@vitest/coverage-v8`, `eslint`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `prettier`.
+
 ## [1.0.2] - 2026-05-22
 
 ### Fixed

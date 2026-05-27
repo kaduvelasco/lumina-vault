@@ -17,15 +17,44 @@ The project is built with a **modular handler-based architecture**:
 ### 1. Adding a New Tool
 
 1. Create a new handler in `src/handlers/MyNewToolHandler.ts`.
-2. Define a **Zod** schema for input validation.
-3. Implement the `execute` method.
-4. Register the new handler in `src/handlers/index.ts`.
+2. Declare a module-level **Zod** schema constant for input validation.
+3. Extend `BaseToolHandler` using `typeof YourSchema` as the generic parameter.
+4. Implement the `execute` method.
+5. Register the new handler in `src/handlers/index.ts`.
+
+Example handler structure:
+
+```typescript
+import { z } from "zod";
+import { BaseToolHandler } from "./base.js";
+
+const MyNewToolInputSchema = z.object({
+  target: z.string().min(1).describe("Target identifier"),
+});
+
+export class MyNewToolHandler extends BaseToolHandler<typeof MyNewToolInputSchema> {
+  public readonly name = "my-new-tool";
+  public readonly description = "One clear sentence describing what this tool does.";
+  public readonly inputSchema = MyNewToolInputSchema;
+
+  async execute(args: z.infer<typeof MyNewToolInputSchema>) {
+    try {
+      // implementation
+      return { content: [{ type: "text", text: "..." }] };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+}
+```
+
+> **Important:** always declare the schema as a `const` before the class and use `typeof SchemaConst` as the generic. Do not annotate the generic with `z.ZodObject<{...}>` — this breaks type inference with Zod v4.
 
 ### 2. Standards
 
-- **TypeScript**: Use strict typing. Avoid `any` unless absolutely necessary (and explain why with an eslint-disable comment).
+- **TypeScript**: Use strict typing. Avoid `any` unless absolutely necessary (and explain why with a comment).
 - **Asynchrony**: All I/O operations must be asynchronous using `fs/promises`.
-- **Validation**: Use Zod for all input schemas.
+- **Validation**: Use Zod v4 for all input schemas. Add `.describe()` to every field.
 - **Linting**: Run `npm run lint` before committing.
 - **Formatting**: We use Prettier. Use `npm run format` to keep the code consistent.
 
